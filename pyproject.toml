@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ChainBuilder"
+version = "0.0.1"
+description = "A tool to quickly and easily build complex LLM chains. Chain Builder is a sophisticated wrapper around core LangChain functionality allowing for quickly building complex multi-layer LLM chains."
+authors = [
+    { name = "Spencer Presley", email = "spencerpresley96@gmail.com" },
+]
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "langchain==0.3.7",
+    "langchain_anthropic==0.3.0", 
+    "langchain_core==0.3.19",
+    "langchain_google_genai==2.0.5",
+    "langchain_openai==0.2.9",
+    "openai==1.58.1",
+    "pydantic==2.9.2",
+    "platformdirs==4.3.6",
+]
+
+[project.optional-dependencies]
+docs = [
+    "sphinx",
+    "piccolo-theme",
+    "sphinx-autodoc-typehints",
+    "pydata-sphinx-theme",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/SpencerPresley/ChainBuilder"
+"Bug Tracker" = "https://github.com/SpencerPresley/ChainBuilder/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["chain_builder*"]
+namespaces = false
