@@ -78,8 +78,6 @@ class _ChainBuilder:
         self.parser: Optional[ParserUnion] = parser
         self.fallback_parser: Optional[ParserUnion] = fallback_parser
         self.llm: Union[ChatOpenAI, ChatAnthropic, ChatGoogleGenerativeAI] = llm
-        self.chain: Runnable = self._build_chain()
-        self.fallback_chain: Runnable = self._build_fallback_chain()
         if debug is None:
             warnings.warn(
                 "The `debug` argument takes an optional boolean value, you gave None. "
@@ -88,6 +86,9 @@ class _ChainBuilder:
                 "you can simply omit the `debug` argument.\n"
             )
         self.debug: bool = False if debug is None else debug
+        self.chain: Runnable = self._build_chain()
+        self.fallback_chain: Runnable = self._build_fallback_chain()
+
                 
     def __str__(self) -> str:
         """Returns a concise string representation of the ChainBuilder object.
