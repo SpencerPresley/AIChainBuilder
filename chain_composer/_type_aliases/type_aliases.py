@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from langchain_openai import ChatOpenAI
     from langchain_anthropic import ChatAnthropic
 
-FirstCallRequired = TypeVar("FirsCallRequired", bound=Dict[str, Any])
+FirstCallRequired = TypeVar("FirstCallRequired", bound=Dict[str, Any])
 """TypeVar representing a dictionary that is required on first call but optional after.
 
 Type Structure:

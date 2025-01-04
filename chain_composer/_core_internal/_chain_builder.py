@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-import logging
+import warnings
 from typing import (
     Optional,
     Union,
     TYPE_CHECKING,
+    Type,
 )
 
 from langchain.prompts import ChatPromptTemplate
@@ -19,8 +20,7 @@ from .._logging import get_logger, WARNING
 
 if TYPE_CHECKING:
     from .._type_aliases import (
-        ParserType,
-        FallbackParserType,
+        ParserUnion,
         LLMUnion,
     )
 
@@ -47,10 +47,10 @@ class _ChainBuilder:
         *,
         chat_prompt: ChatPromptTemplate,
         llm: LLMUnion,
-        parser: ParserType | None = None,
-        fallback_parser: FallbackParserType | None = None,
+        parser: ParserUnion | None = None,
+        fallback_parser: ParserUnion | None = None,
         enable_logging: bool | None = False,
-        level: logging.Level | None = WARNING,
+        level: int | None = WARNING,
         debug: bool | None = False,
     ) -> None:
         """Initialize a ChainBuilder instance.
@@ -75,13 +75,20 @@ class _ChainBuilder:
             null_logger=not enable_logging,
         )
         self.chat_prompt: ChatPromptTemplate = chat_prompt
-        self.parser: Optional[ParserType] = parser
-        self.fallback_parser: Optional[FallbackParserType] = fallback_parser
+        self.parser: Optional[ParserUnion] = parser
+        self.fallback_parser: Optional[ParserUnion] = fallback_parser
         self.llm: Union[ChatOpenAI, ChatAnthropic, ChatGoogleGenerativeAI] = llm
         self.chain: Runnable = self._build_chain()
         self.fallback_chain: Runnable = self._build_fallback_chain()
-        self.debug: bool = debug
-        
+        if debug is None:
+            warnings.warn(
+                "The `debug` argument takes an optional boolean value, you gave None. "
+                "The value will be set to False.\n"
+                "If your intention is to not enable debug logging, "
+                "you can simply omit the `debug` argument.\n"
+            )
+        self.debug: bool = False if debug is None else debug
+                
     def __str__(self) -> str:
         """Returns a concise string representation of the ChainBuilder object.
         
@@ -131,14 +138,15 @@ class _ChainBuilder:
         Returns:
             :class:`Runnable`: The constructed chain of `Runnable` objects.
         """
-        # Build the chain
+        # Build the base chain
         chain: Runnable = RunnablePassthrough() | self.chat_prompt | self.llm
 
+        # Add parser if provided
         if self.parser:
             if self.debug:
                 self._run_pydantic_parser_logging()
-            chain: Runnable = chain | self.parser
-
+            return chain | self.parser
+            
         return chain
 
     def _build_fallback_chain(self) -> Runnable:
@@ -147,15 +155,17 @@ class _ChainBuilder:
         This method constructs a fallback chain by combining a `RunnablePassthrough` instance with the `chat_prompt` and `llm` attributes. If a `fallback_parser` is provided, it adds the parser to the chain. If `debug` is enabled, `_run_pydantic_parser_logging()` is executed.
 
         Returns:
-            :class:`Runnable`: The constructed fallback chain.
+            Runnable: The constructed fallback chain.
         """
+        # Build the base fallback chain
         fallback_chain: Runnable = RunnablePassthrough() | self.chat_prompt | self.llm
 
+        # Add fallback parser if provided
         if self.fallback_parser:
             if self.debug:
                 self._run_pydantic_parser_logging()
-            fallback_chain: Runnable = fallback_chain | self.fallback_parser
-
+            return fallback_chain | self.fallback_parser
+            
         return fallback_chain
 
     def _run_pydantic_parser_logging(self) -> None:
@@ -164,11 +174,11 @@ class _ChainBuilder:
         Logs the required fields and their default values (if any) for a Pydantic model if the parser is an instance of PydanticOutputParser. Additionally, it logs the JSON schema of the Pydantic model.
         """
         if isinstance(self.parser, PydanticOutputParser):
-            pydantic_model: BaseModel = self.parser.pydantic_object
+            pydantic_model: Type[BaseModel] = self.parser.pydantic_object
             self.logger.info("Required fields in Pydantic model:")
             for field_name, field in pydantic_model.model_fields.items():
                 self.logger.info(
-                    f"  {field_name}: {'required' if field.is_required else 'optional'}"
+                    f"  {field_name}: {'required' if field.is_required else 'optional'}" # type: ignore[truthy-function]
                 )
                 if field.default is not None:
                     self.logger.info(f"    Default: {field.default}")

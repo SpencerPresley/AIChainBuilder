@@ -39,8 +39,7 @@ class _ChainError(Exception):
         if not self._is_valid_state(message, original_error, error_reference):
             raise ValueError(self._INVALID_STATE_ERROR_MESSAGE)
         
-        if not self._message_exists(message):
-            self.message = ""
+        message = message if message is not None else ""
         
         if error_reference is not None:
             self._raise_error_with_ref(original_error, error_reference)
@@ -120,19 +119,19 @@ class _ChainError(Exception):
                 f"but is of type: {type(original_error)}\n\n"
             )
         
-        elif not message_exists and not original_error_exists:
+        if not message_exists and not original_error_exists:
             self._INVALID_STATE_ERROR_MESSAGE += (
                 "A message or original error must be provided\n\n"
             )
             
-        elif message_exists and error_reference_exists:
+        if message_exists and error_reference_exists:
             self._INVALID_STATE_ERROR_MESSAGE += (
                 "Error references are for looking up error messages, "
-                "so a message should not be provided\n",
-                "Instead, edit your error message associated with the error reference\n\n"
+                "so a message should not be provided. "
+                "Instead, edit your error message associated with the error reference.\n\n"
             )
         
-        elif message_exists or (original_error_exists and original_error_is_exception):
+        if message_exists or (original_error_exists and original_error_is_exception):
             is_valid = True
         
         return is_valid

@@ -12,6 +12,7 @@ from typing import (
     Tuple,
     Union,
     TYPE_CHECKING,
+    Type,
 )
 
 from langchain.prompts import (
@@ -31,7 +32,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
 
 from .._logging import get_logger, WARNING
-from .._error_handling import (
+from .._error_handling import ( # type: ignore[attr-defined]
     _ChainExceptionFactory,
     _ChainComposerErrorReference,
     _ChainComposerValidator,
@@ -47,7 +48,7 @@ if TYPE_CHECKING:
     from pydantic import BaseModel
     from .._type_aliases import (
         FirstCallRequired,
-        ParserType,
+        ParserUnion,
     )
 
 
@@ -84,7 +85,7 @@ class ChainComposer:
         preprocessor: Callable[[Dict[str, Any]], Dict[str, Any]] | None = None,
         postprocessor: Callable[[Any], Any] | None = None,
         enable_logging: bool | None = False,
-        level: logging.Level | None = WARNING,
+        level: int | None = WARNING,
     ) -> None:
         """Initializes the ChainComposer class.
 
@@ -126,7 +127,27 @@ class ChainComposer:
                 llm_temperature=self.llm_temperature,
             )
         )
-        self.chain_manager: _ChainManager = _ChainManager(logger=self.logger)
+        self.enable_logging: bool = ( # type: ignore[assignment]
+            False
+            if (
+                (enable_logging is False) or 
+                (enable_logging is None) or 
+                (not isinstance(enable_logging, bool))
+            )
+            else enable_logging
+        )
+        self.level: int = (  # type: ignore[assignment]
+            WARNING
+            if (
+                (level is None) or 
+                (not isinstance(level, int))
+            )
+            else level
+        )
+        self.chain_manager: _ChainManager = _ChainManager(
+            enable_logging=self.enable_logging,
+            level=self.level,
+        )
 
         self.chain_variables: Dict[str, Any] = {}
 
@@ -181,9 +202,9 @@ class ChainComposer:
         postprocessor: Callable[[Any], Any] | None = None,
         parser_type: Literal["pydantic", "json", "str"] | None = None,
         fallback_parser_type: Literal["pydantic", "json", "str"] | None = None,
-        pydantic_output_model: BaseModel | None = None,
-        fallback_pydantic_output_model: BaseModel | None = None,
-    ) -> None:
+        pydantic_output_model: Type[BaseModel] | None = None,
+        fallback_pydantic_output_model: Type[BaseModel] | None = None,
+    ) -> "ChainComposer":
         """Adds a chain layer to the chain composer.
 
         This method configures and adds a new chain layer to the chain composer,
@@ -208,9 +229,9 @@ class ChainComposer:
             fallback_parser_type (str | None): Type of fallback parser.
                 Type: Literal["pydantic", "json", "str"] | None
                 Defaults to None.
-            pydantic_output_model (BaseModel | None): Pydantic model for output validation.
+            pydantic_output_model (Type[BaseModel] | None): Pydantic model for output validation.
                 Defaults to None
-            fallback_pydantic_output_model (BaseModel | None): Pydantic model for fallback parser.
+            fallback_pydantic_output_model (Type[BaseModel] | None): Pydantic model for fallback parser.
                 Defaults to None.
 
         Returns:
@@ -225,8 +246,8 @@ class ChainComposer:
             fallback_pydantic_output_model=fallback_pydantic_output_model,
         )
 
-        parser: Optional[ParserType] = None
-        fallback_parser: Optional[ParserType] = None
+        parser: Optional[ParserUnion] = None
+        fallback_parser: Optional[ParserUnion] = None
         if parser_type:
             parser = self._initialize_parser(
                 parser_type=parser_type, pydantic_output_model=pydantic_output_model
@@ -237,8 +258,8 @@ class ChainComposer:
                 pydantic_output_model=fallback_pydantic_output_model,
             )
         # Create prompt templates without specifying input_variables
-        system_prompt_template: PromptTemplate = PromptTemplate(template=system_prompt)
-        human_prompt_template: PromptTemplate = PromptTemplate(template=human_prompt)
+        system_prompt_template: PromptTemplate = PromptTemplate(template=system_prompt) # type: ignore[call-arg]
+        human_prompt_template: PromptTemplate = PromptTemplate(template=human_prompt) # type: ignore[call-arg]
         system_message_prompt_template: SystemMessagePromptTemplate = (
             SystemMessagePromptTemplate.from_template(system_prompt_template.template)
         )
@@ -255,7 +276,8 @@ class ChainComposer:
             llm=self.llm,
             parser=parser,
             fallback_parser=fallback_parser,
-            logger=self.logger,
+            enable_logging=self.enable_logging,
+            level=self.level,
         )
         chain: Runnable = chain_builder.get_chain()
         fallback_chain: Runnable = chain_builder.get_fallback_chain()
@@ -268,7 +290,8 @@ class ChainComposer:
             fallback_parser=fallback_parser,
             preprocessor=preprocessor or self.preprocessor,
             postprocessor=postprocessor or self.postprocessor,
-            logger=self.logger,
+            enable_logging=self.enable_logging,
+            level=self.level,
         )
 
         # Add the chain to the composer
@@ -284,7 +307,7 @@ class ChainComposer:
         self,
         *,
         prompt_variables_dict: Union[FirstCallRequired, None] = None,
-    ) -> str:
+    ) -> Dict[str, Any]:
         """Executes the chain builder process.
 
         This method performs validation checks, updates chain variables if provided,
@@ -297,7 +320,7 @@ class ChainComposer:
                 Defaults to None.
 
         Returns:
-            str: The result of running the chain composer.
+            dict: The result of running the chain composer.
         """
         self._run_validation_checks(
             prompt_variables_dict=prompt_variables_dict,
@@ -393,12 +416,6 @@ class ChainComposer:
                 Defaults to None.
             llm_temperature (float | None): The temperature setting for the language model, affecting randomness.
                 Defaults to None.
-            llm_kwargs (dict | None): Additional keyword arguments specific to the language model.
-                Type: Dict[str, Any]
-                Defaults to None.
-            logit_bias_dict (dict | None): A dictionary mapping token IDs to logit bias values.
-                Type: Dict[int, int]
-                Defaults to None.
 
         Returns:
             LLMUnion: An instance of the initialized language model.
@@ -417,9 +434,6 @@ class ChainComposer:
 
         if llm_temperature is None:
             llm_temperature = self.llm_temperature
-
-        if llm_kwargs is None:
-            llm_kwargs = self.llm_kwargs
 
         if llm_model_type == "openai":
             return self._create_openai_llm(
@@ -463,19 +477,14 @@ class ChainComposer:
             llm_model (str): The identifier of the language model to use.
             llm_temperature (float): The temperature setting for the language model,
                 which controls the randomness of the output.
-            llm_kwargs (dict): Additional keyword arguments to pass to the ChatOpenAI constructor.
-                Type: Dict[str, Any]
-            logit_bias_dict (dict | None): A dictionary mapping token IDs to logit bias values.
-                Type: Dict[int, int] | None
-                Defaults to None.
 
         Returns:
-            :class:`ChatOpenAI`: An instance of the ChatOpenAI language model configured with
+            ChatOpenAI: An instance of the ChatOpenAI language model configured with
                 the specified parameters.
         """
         return ChatOpenAI(
             model=llm_model,
-            api_key=api_key,
+            api_key=api_key, # type: ignore[arg-type]
             temperature=llm_temperature,
         )
 
@@ -492,15 +501,13 @@ class ChainComposer:
             llm_model (str): The identifier of the language model to use.
             llm_temperature (float): The temperature setting for the language model,
                 controlling the randomness of the output.
-            llm_kwargs (dict): Additional keyword arguments to pass to the ChatAnthropic constructor.
-                Type: Dict[str, Any]
 
         Returns:
-            :class:`ChatAnthropic`: An instance of the ChatAnthropic language model.
+            ChatAnthropic: An instance of the ChatAnthropic language model.
         """
-        return ChatAnthropic(
-            model=llm_model, 
-            api_key=api_key, 
+        return ChatAnthropic( # type: ignore[call-arg]
+            model_name=llm_model, 
+            api_key=api_key, # type: ignore[arg-type]
             temperature=llm_temperature,
         )
 
@@ -517,22 +524,22 @@ class ChainComposer:
             llm_model (str): The model identifier for the Google LLM.
             llm_temperature (float): The temperature setting for the LLM,
                 which controls the randomness of the output.
-            llm_kwargs (dict): Additional keyword arguments to pass to the ChatGoogleGenerativeAI constructor.
-                Type: Dict[str, Any]
 
         Returns:
-            :class:`ChatGoogleGenerativeAI`: An instance of the ChatGoogleGenerativeAI class configured
+            ChatGoogleGenerativeAI: An instance of the ChatGoogleGenerativeAI class configured
                 with the provided parameters.
         """
         return ChatGoogleGenerativeAI(
-            model=llm_model, api_key=api_key, temperature=llm_temperature
+            model=llm_model, 
+            api_key=api_key, # type: ignore[arg-type]
+            temperature=llm_temperature,
         )
 
     def _initialize_parser(
         self,
         parser_type: Literal["pydantic", "json", "str"],
-        pydantic_output_model: BaseModel | None = None,
-    ) -> ParserType:
+        pydantic_output_model: Type[BaseModel] | None = None,
+    ) -> ParserUnion:
         """Initializes and returns a parser based on the specified parser type.
 
         Args:
@@ -549,19 +556,19 @@ class ChainComposer:
             ChainError: If an invalid parser_type is provided.
         """
         if parser_type == "pydantic":
-            parser: PydanticOutputParser = self._create_pydantic_parser(
+            parser: PydanticOutputParser = self._create_pydantic_parser( # type: ignore[no-redef]
                 pydantic_output_model=pydantic_output_model
             )
             self.logger.debug(f"Created Pydantic parser: {parser}")
             return parser
         elif parser_type == "json":
-            parser: JsonOutputParser = self._create_json_parser(
+            parser: JsonOutputParser = self._create_json_parser( # type: ignore[no-redef]
                 pydantic_output_model=pydantic_output_model
             )
             self.logger.debug(f"Created JSON parser: {parser}")
             return parser
         elif parser_type == "str":
-            parser: StrOutputParser = self._create_str_parser()
+            parser: StrOutputParser = self._create_str_parser() # type: ignore[no-redef]
             self.logger.debug(f"Created Str parser: {parser}")
             return parser
         else:
@@ -572,7 +579,7 @@ class ChainComposer:
 
     def _create_pydantic_parser(
         self,
-        pydantic_output_model: BaseModel | None,
+        pydantic_output_model: Type[BaseModel] | None,
     ) -> PydanticOutputParser:
         """Creates a Pydantic output parser.
 
@@ -599,14 +606,14 @@ class ChainComposer:
         return PydanticOutputParser(pydantic_object=pydantic_output_model)
 
     def _create_json_parser(
-        self, *, pydantic_output_model: BaseModel | None
+        self, *, pydantic_output_model: Type[BaseModel] | None
     ) -> JsonOutputParser:
         """Creates a JSON parser for the chain layer output.
 
         Args:
-            pydantic_output_model (BaseModel | None): An optional Pydantic model to enforce
+            pydantic_output_model (Type[BaseModel] | None): An optional Pydantic model to enforce
                 typing on the JSON output.
-                Type: BaseModel | None
+                Type: Type[BaseModel] | None
                 Defaults to None.
 
         Returns:
@@ -644,9 +651,9 @@ class ChainComposer:
         output_passthrough_key_name: str | None,
         ignore_output_passthrough_key_name_error: bool,
         parser_type: Literal["pydantic", "json", "str"] | None,
-        pydantic_output_model: BaseModel | None,
+        pydantic_output_model: Type[BaseModel] | None,
         fallback_parser_type: Literal["pydantic", "json", "str"] | None,
-        fallback_pydantic_output_model: BaseModel | None,
+        fallback_pydantic_output_model: Type[BaseModel] | None,
     ) -> None:
         """Validates chain configuration parameters before execution.
 
@@ -663,12 +670,12 @@ class ChainComposer:
             parser_type (str | None): Type of parser to use.
                 Type: Literal["pydantic", "json", "str"] | None
                 Defaults to None.
-            pydantic_output_model (BaseModel | None): Pydantic model for output validation.
+            pydantic_output_model (Type[BaseModel] | None): Pydantic model for output validation.
                 Defaults to None.
             fallback_parser_type (str | None): Type of fallback parser.
                 Type: Literal["pydantic", "json", "str"] | None
                 Defaults to None.
-            fallback_pydantic_output_model (BaseModel | None): Pydantic model for fallback parser.
+            fallback_pydantic_output_model (Type[BaseModel] | None): Pydantic model for fallback parser.
                 Defaults to None.
 
         Raises:

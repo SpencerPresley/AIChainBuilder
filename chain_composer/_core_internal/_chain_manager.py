@@ -62,7 +62,7 @@ class _ChainManager:
     def __init__(
         self,
         enable_logging: bool | None = False,
-        level: logging.Level | None = WARNING,
+        level: int | None = WARNING,
     ) -> None:
         """Initializes the ChainManager instance.
 

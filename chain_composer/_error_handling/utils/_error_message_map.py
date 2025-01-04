@@ -1,3 +1,10 @@
+from __future__ import annotations
+
+from typing import Final, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..enums import _BaseErrorReference
+
 from ..messages import (
     INPUT_ERROR_MESSAGE,
     MAIN_CHAIN_JSON_ERROR_MESSAGE,
@@ -19,7 +26,7 @@ from ..enums import (
     _ErrorType,
 )
 
-_ERROR_MESSAGE_MAP = {
+_ERROR_MESSAGE_MAP: Final[dict[_BaseErrorReference, dict[_ErrorType, str]]] = {
     _ChainWrapperErrorReference.INPUT_ERROR: {
         _ErrorType.VALUE_ERROR: INPUT_ERROR_MESSAGE,
     },

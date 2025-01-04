@@ -63,7 +63,7 @@ CRITICAL = logging.CRITICAL
 # in the get_logger() function.
 VALID_LOG_LEVELS = {DEBUG, INFO, WARNING, ERROR, CRITICAL}
 
-def _validate_log_level(level: logging.Level) -> None:
+def _validate_log_level(level: int) -> None:
     """Validate the log level is a valid python logging log level
 
     Args:
@@ -104,7 +104,7 @@ def _get_existing_logger(module_name: str) -> logging.Logger:
 
 def _get_real_logger(
     module_name: str,
-    level: logging.Level | None = WARNING,
+    level: int | None = WARNING,
 ) -> logging.Logger:
     """Configure a logger for a specific module.
 
@@ -173,7 +173,7 @@ def _get_null_logger(module_name: str) -> logging.Logger:
 
 def get_logger(
     module_name: str,
-    level: logging.Level | None = WARNING,
+    level: int | None = WARNING,
     null_logger: bool | None = False,
 ) -> logging.Logger:
     """Get a logger for the module

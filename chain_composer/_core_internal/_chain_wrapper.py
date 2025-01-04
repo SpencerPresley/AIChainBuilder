@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-import logging
+import warnings
 from typing import (
     Any,
     Callable,
@@ -15,7 +15,7 @@ from langchain.schema.runnable import Runnable
 from pydantic import BaseModel, ValidationError
 
 from .._logging import get_logger, WARNING
-from .._error_handling import (
+from .._error_handling import ( # type: ignore[attr-defined]
     _ChainExceptionFactory,
     _ChainWrapperErrorReference,
 )
@@ -62,7 +62,7 @@ class _ChainWrapper:
         preprocessor: Callable[[Dict[str, Any]], Dict[str, Any]] | None = None,
         postprocessor: Callable[[Any], Any] | None = None,
         enable_logging: bool | None = False,
-        level: logging.Level | None = WARNING,
+        level: int | None = WARNING,
         debug: bool | None = False,
     ) -> None:
         """Initialize the ChainBuilder.
@@ -96,7 +96,14 @@ class _ChainWrapper:
         self.chain: Runnable = chain
         self.fallback_chain: Runnable = fallback_chain
         self.postprocessor: Optional[Callable[[Any], Any]] = postprocessor
-        self.debug: bool = debug
+        if debug is None:
+            warnings.warn(
+                "The `debug` argument takes an optional boolean value, you gave None. "
+                "The value will be set to False.\n"
+                "Additionally, if your intention is to not enable debug logging, "
+                "you can simply omit the `debug` argument.\n"
+            )
+        self.debug: bool = debug if debug is not None else False
 
     def __str__(self) -> str:
         """Returns a string representation of the ChainWrapper object.
@@ -151,15 +158,22 @@ class _ChainWrapper:
             ValidationError: If a validation error occurs in both the main and fallback chains.
             TypeError: If a type error occurs in both the main and fallback chains.
         """
-        if cast(Any, input_data) is None:
-            raise _ChainExceptionFactory.create_error(
-                error=ValueError("No input data provided"),
-                error_reference=_ChainWrapperErrorReference.INPUT_ERROR
+        if is_last_chain is None:
+            warnings.warn(
+                "The `is_last_chain` argument takes an optional boolean value, you gave None. "
+                "The value will be set to False.\n"
+                "Additionally, if your intention is to not enable debug logging, "
+                "you can simply omit the `debug` argument.\n"
             )
-
-        if self.preprocessor:
-            input_data = self.preprocessor(input_data)
-        output = None
+        is_last_chain: bool = ( # type: ignore[no-redef]
+            False 
+            if (is_last_chain is None) or (not isinstance(is_last_chain, bool))
+            else is_last_chain 
+        ) 
+        assert isinstance(is_last_chain, bool)
+        
+        if (input_data is not None) and (self.preprocessor is not None):
+            input_data = self.preprocessor(input_data) # type: ignore[no-redef]
 
         try:
             # Attempt to invoke the primary chain
@@ -178,7 +192,7 @@ class _ChainWrapper:
             else:
                 try:
                     # Attempt to invoke the fallback chain
-                    output: Any = self.fallback_chain.invoke(input_data)
+                    output: Any = self.fallback_chain.invoke(input_data) # type: ignore[no-redef]
                 except (
                     json.JSONDecodeError,
                     ValidationError,
@@ -196,7 +210,7 @@ class _ChainWrapper:
             return output.model_dump()
 
         if self.postprocessor:
-            output: Any = self.postprocessor(output)
+            output: Any = self.postprocessor(output) # type: ignore[no-redef]
 
         return output
 
@@ -225,7 +239,7 @@ class _ChainWrapper:
             is_last_chain (bool): Indicates if this is the last chain in the sequence.
                 Defaults to False.
         """
-        return self.fallback_chain and not is_last_chain
+        return (self.fallback_chain is not None) and (not is_last_chain)
 
     def _handle_main_chain_error(
         self,

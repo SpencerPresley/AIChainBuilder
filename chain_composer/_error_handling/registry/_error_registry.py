@@ -5,18 +5,16 @@ from typing import Type, Dict, TypeVar, TYPE_CHECKING, Callable
 if TYPE_CHECKING:
     from ..classes import _ChainError
 
-T = TypeVar('T', bound='_ChainError')
-
 class _ErrorRegistry:
     """Registry for mapping exception types to their handlers."""
     
-    _registry: Dict[Type[Exception], Type[T]] = {}
+    _registry: Dict[Type[Exception], Type[_ChainError]] = {}
     
     @classmethod
     def register(
         cls,
         handled_exception: Type[Exception],
-    ) -> Callable[[Type[T]], Type[T]]:
+    ) -> Callable[[Type[_ChainError]], Type[_ChainError]]:
         """Decorator to register an error handler for a specific exception type.
         
         Args:
@@ -25,7 +23,7 @@ class _ErrorRegistry:
         Returns:
             Callable[[Type[T]], Type[T]]: A decorator that registers the handler for the exception type.
         """
-        def decorator(handler_cls: Type[T]) -> Type[T]:
+        def decorator(handler_cls: Type[_ChainError]) -> Type[_ChainError]:
             cls._registry[handled_exception] = handler_cls
             return handler_cls
         return decorator
@@ -34,7 +32,7 @@ class _ErrorRegistry:
     def get_handler(
         cls,
         exception: Exception,
-    ) -> Type[T] | None:
+    ) -> Type[_ChainError] | None:
         """Get the appropriate handler for an exception type.
         
         Args:

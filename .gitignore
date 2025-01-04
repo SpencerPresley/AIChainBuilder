@@ -3,3 +3,5 @@ requirements.txt
 .cursorrules
 ChainBuilder.egg-info/
 **/.DS_Store
+**/__pycache__/
+**ChainComposer.egg-info/

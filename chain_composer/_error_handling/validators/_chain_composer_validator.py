@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from typing import Union, TYPE_CHECKING, cast
-from pydantic import BaseModel
+from typing import Union, TYPE_CHECKING, cast, Type
 
-from ..enums._error_reference import _ChainManagerErrorReference
+from ..enums._error_reference import _ChainComposerErrorReference
 from ..factories import _ChainExceptionFactory
 
 if TYPE_CHECKING:
+    from pydantic import BaseModel
     from chain_composer._type_aliases import FirstCallRequired
 
 class _ChainComposerValidator:
@@ -34,7 +34,7 @@ class _ChainComposerValidator:
         
         raise _ChainExceptionFactory.create_error(
             error=ValueError(f"Unsupported LLM model: {llm_model}"),
-            error_reference=_ChainManagerErrorReference.UNSUPPORTED_LLM_MODEL
+            error_reference=_ChainComposerErrorReference.UNSUPPORTED_LLM_MODEL
         )
     
     @staticmethod
@@ -43,9 +43,9 @@ class _ChainComposerValidator:
         output_passthrough_key_name: str | None,
         ignore_output_passthrough_key_name_error: bool,
         parser_type: str | None,
-        pydantic_output_model: BaseModel | None,
+        pydantic_output_model: Type[BaseModel] | None,
         fallback_parser_type: str | None,
-        fallback_pydantic_output_model: BaseModel | None,
+        fallback_pydantic_output_model: Type[BaseModel] | None,
     ) -> None:
         """Validate parser configuration parameters.
         
@@ -53,9 +53,9 @@ class _ChainComposerValidator:
             output_passthrough_key_name (str | None): Key name for output.
             ignore_output_passthrough_key_name_error (bool): Whether to ignore missing key name.
             parser_type (str | None): Type of parser.
-            pydantic_output_model (BaseModel | None): Pydantic model for output.
+            pydantic_output_model (Type[BaseModel] | None): Pydantic model for output.
             fallback_parser_type (str | None): Type of fallback parser.
-            fallback_pydantic_output_model (BaseModel | None): Pydantic model for fallback.
+            fallback_pydantic_output_model (Type[BaseModel] | None): Pydantic model for fallback.
             
         Raises:
             ChainError: If validation fails.
@@ -63,37 +63,37 @@ class _ChainComposerValidator:
         if not output_passthrough_key_name and not ignore_output_passthrough_key_name_error:
             raise _ChainExceptionFactory.create_error(
                 error=ValueError("Missing output key name"),
-                error_reference=_ChainManagerErrorReference.MISSING_OUTPUT_KEY
+                error_reference=_ChainComposerErrorReference.MISSING_OUTPUT_KEY
             )
             
         if parser_type is None and fallback_parser_type is not None:
             raise _ChainExceptionFactory.create_error(
                 error=ValueError("Invalid parser combination"),
-                error_reference=_ChainManagerErrorReference.INVALID_PARSER_COMBINATION
+                error_reference=_ChainComposerErrorReference.INVALID_PARSER_COMBINATION
             )
             
         if parser_type == "pydantic" and not pydantic_output_model:
             raise _ChainExceptionFactory.create_error(
                 error=ValueError("Missing Pydantic model for parser"),
-                error_reference=_ChainManagerErrorReference.MISSING_PYDANTIC_MODEL
+                error_reference=_ChainComposerErrorReference.MISSING_PYDANTIC_MODEL
             )
             
         if fallback_parser_type == "pydantic" and not fallback_pydantic_output_model:
             raise _ChainExceptionFactory.create_error(
                 error=ValueError("Missing Pydantic model for fallback parser"),
-                error_reference=_ChainManagerErrorReference.MISSING_PYDANTIC_MODEL
+                error_reference=_ChainComposerErrorReference.MISSING_PYDANTIC_MODEL
             )
             
         if parser_type and parser_type not in ["pydantic", "json", "str"]:
             raise _ChainExceptionFactory.create_error(
                 error=ValueError(f"Invalid parser type: {parser_type}"),
-                error_reference=_ChainManagerErrorReference.INVALID_PARSER_TYPE
+                error_reference=_ChainComposerErrorReference.INVALID_PARSER_TYPE
             )
             
         if fallback_parser_type and fallback_parser_type not in ["pydantic", "json", "str"]:
             raise _ChainExceptionFactory.create_error(
                 error=ValueError(f"Invalid fallback parser type: {fallback_parser_type}"),
-                error_reference=_ChainManagerErrorReference.INVALID_PARSER_TYPE
+                error_reference=_ChainComposerErrorReference.INVALID_PARSER_TYPE
             )
     
     @staticmethod
@@ -113,7 +113,7 @@ class _ChainComposerValidator:
         if is_first_call and prompt_variables_dict is None:
             raise _ChainExceptionFactory.create_error(
                 error=ValueError("First call must provide prompt variables"),
-                error_reference=_ChainManagerErrorReference.MISSING_PROMPT_VARIABLES
+                error_reference=_ChainComposerErrorReference.MISSING_PROMPT_VARIABLES
             )
             
         if prompt_variables_dict is not None:
@@ -137,5 +137,5 @@ class _ChainComposerValidator:
                         "Check your prompt strings for your placeholder variables, these names should match the keys in "
                         f"{prompt_variables_dict} passed into the ChainManager.run() method."
                     ),
-                    error_reference=_ChainManagerErrorReference.INVALID_PROMPT_VARIABLES
+                    error_reference=_ChainComposerErrorReference.INVALID_PROMPT_VARIABLES
                 ) 
