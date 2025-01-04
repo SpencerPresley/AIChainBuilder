@@ -306,7 +306,7 @@ class ChainComposer:
         if prompt_variables_dict is not None:
             self._update_chain_variables(prompt_variables_dict)
 
-        return self.chain_composer.run(
+        return self.chain_manager.run(
             data_dict=self.chain_variables,
             data_dict_update_function=self._update_chain_variables,
         )

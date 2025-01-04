@@ -60,7 +60,7 @@ CRITICAL = logging.CRITICAL
 
 # Used to validate the log_level argument is
 # a valid python logging log level
-# in the configure_logging() function.
+# in the _get_real_logger() function.
 VALID_LOG_LEVELS = {DEBUG, INFO, WARNING, ERROR, CRITICAL}
 
 def _validate_log_level(level: logging.Level) -> None:
@@ -78,7 +78,7 @@ def _validate_log_level(level: logging.Level) -> None:
             f"Must be one of: {VALID_LOG_LEVELS}."
         )
 
-def _check_for_existing_logger(module_name: str) -> None:
+def _is_existing_logger(module_name: str) -> bool:
     """Check if a logger already exists for the module
 
     Args:
@@ -102,37 +102,47 @@ def _get_existing_logger(module_name: str) -> logging.Logger:
     """
     return _configured_loggers[module_name]
 
-def configure_logging(
+def _get_real_logger(
     module_name: str,
     level: logging.Level | None = WARNING,
 ) -> logging.Logger:
     """Configure a logger for a specific module.
 
-    Creates a new logger for the module or returns the existing one.
-
+    Creates a new, or returns an existing, logger for the module.
+    If there is an existing logger for the module, and it is a null logger,
+    a real logger will be created and returned.
+    
     Args:
         module_name (str): The name of the module to configure logging for.
-        - This should be passed in as the `__name__` variable of the module.
-
+            This should be passed in as the `__name__` variable of the module.
         level (logging.Level | None): The log level to use for the module.
-        - This should be a valid python logging log level.
-        - Defaults to `logging.WARNING`.
+            Defaults to logging.WARNING.
 
     Returns:
         logging.Logger: The configured logger for the module.
-
     """
     if level is None:
         level = WARNING
-    else:
-        _validate_log_level(level)
     
-    if _check_for_existing_logger(module_name):
-        return _get_existing_logger(module_name)
+    if _is_existing_logger(module_name):
+        existing_logger = _get_existing_logger(module_name)
+        # Check if any of the handlers is a NullHandler
+        if not any(
+            isinstance(handler, logging.NullHandler) 
+            for handler in existing_logger.handlers
+        ):
+            return existing_logger
     
-    logger = logging.getLogger(module_name)
+    # Create new logger as either:
+    # - No existing logger was found
+    # or
+    # - Existing logger was a null logger
+    logger = logging.getLogger(module_name)  
     logger.setLevel(level)
     logger.propagate = False
+
+    # Clear any existing handlers (important for converting null logger to real logger)
+    logger.handlers.clear()
 
     formatter = ColorFormatter(
         "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -146,27 +156,46 @@ def configure_logging(
     _configured_loggers[module_name] = logger
     return logger
 
-def get_logger(
-    module_name: str,
-    level: logging.Level,
-    null_logger: bool | None = False,
-) -> logging.Logger:
-    """Get a logger for the module
+def _get_null_logger(module_name: str) -> logging.Logger:
+    """Get a null logger for the module
 
     Args:
         module_name (str): The name of the module to get the logger for.
-        level (logging.Level): The log level to set for the logger.
+
+    Returns:
+        logging.Logger: The null logger for the module.
+    """
+    logger = logging.getLogger(module_name)
+    logger.addHandler(logging.NullHandler())
+    logger.propagate = False
+    _configured_loggers[module_name] = logger
+    return logger
+
+def get_logger(
+    module_name: str,
+    level: logging.Level | None = WARNING,
+    null_logger: bool | None = False,
+) -> logging.Logger:
+    """Get a logger for the module
+    
+    Validates the log level provided is a valid python logging log level.
+    Returns a null logger if the null_logger argument is True,
+    otherwise returns a real logger.
+    
+    Args:
+        module_name (str): The name of the module to get the logger for.
+        level (logging.Level | None): The log level to set for the logger.
+            Defaults to logging.WARNING.
         null_logger (bool | None): Whether to return a null logger.
             Defaults to False.
 
     Returns:
         logging.Logger: The logger for the module.
     """
+    if level is not None:
+        _validate_log_level(level)
+        
     if null_logger:
-        return configure_logging(
-            module_name=module_name,
-            level=level,
-            null_logger=True,
-        )
+        return _get_null_logger(module_name=module_name)
     else:
-        return configure_logging(module_name=module_name, level=level)
+        return _get_real_logger(module_name=module_name, level=level)
