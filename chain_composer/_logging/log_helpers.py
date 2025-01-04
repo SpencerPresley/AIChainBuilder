@@ -60,7 +60,7 @@ CRITICAL = logging.CRITICAL
 
 # Used to validate the log_level argument is
 # a valid python logging log level
-# in the _get_real_logger() function.
+# in the get_logger() function.
 VALID_LOG_LEVELS = {DEBUG, INFO, WARNING, ERROR, CRITICAL}
 
 def _validate_log_level(level: logging.Level) -> None:
