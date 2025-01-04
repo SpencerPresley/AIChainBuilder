@@ -3,9 +3,9 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ChainBuilder"
+name = "ChainComposer"
 version = "0.0.1"
-description = "A tool to quickly and easily build complex LLM chains. Chain Builder is a sophisticated wrapper around core LangChain functionality allowing for quickly building complex multi-layer LLM chains."
+description = "A tool to quickly and easily build complex LLM chains. Chain Composer is a sophisticated wrapper around core LangChain functionality allowing for quickly building complex multi-layer LLM chains."
 authors = [
     { name = "Spencer Presley", email = "spencerpresley96@gmail.com" },
 ]
@@ -36,10 +36,10 @@ docs = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/SpencerPresley/ChainBuilder"
-"Bug Tracker" = "https://github.com/SpencerPresley/ChainBuilder/issues"
+"Homepage" = "https://github.com/SpencerPresley/AIChainComposer"
+"Bug Tracker" = "https://github.com/SpencerPresley/AIChainComposer/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["chain_builder*"]
+include = ["chain_composer*"]
 namespaces = false

@@ -1,1 +1,5 @@
 .env
+requirements.txt
+.cursorrules
+ChainBuilder.egg-info/
+**/.DS_Store
