@@ -8,3 +8,4 @@ ChainBuilder.egg-info/
 **.coverage
 **.pdm-python
 **pdm.lock
+**.cursorignore

@@ -125,16 +125,22 @@ class APIKeyValidator:
         prompt: ChatPromptTemplate = self._get_test_prompt()
         
         results.openai = self._test_provider(
+            api_key,
             self._get_openai_llm(api_key, model),
             prompt,
+            model,
         )
         results.anthropic = self._test_provider(
+            api_key,
             self._get_anthropic_llm(api_key, model),
             prompt,
+            model,
         )
         results.google = self._test_provider(
+            api_key,
             self._get_google_llm(api_key, model),
             prompt,
+            model,
         )
         
         self._validated_already[api_key] = results
@@ -199,6 +205,7 @@ class APIKeyValidator:
         api_key: str,
         llm: ChatOpenAI | ChatAnthropic | ChatGoogleGenerativeAI,
         prompt: ChatPromptTemplate,
+        model: str | None = None,
     ) -> bool:
         """Run a test to see if the API key is valid for a given provider.
         
@@ -233,8 +240,8 @@ class APIKeyValidator:
                 warnings.warn(
                     f"The API key: {self._mask(api_key)} has an issue associated with it.\n"
                     f"Error: {str(e)}\n"
-                    f"Provider: {llm.__class__.__name__}\n"
-                    f"Model: {llm.model_name}\n"
+                    f"Provider: {type(llm)}\n"
+                    f"Model: {model}\n"
                 ) # Raise detailed error for known issues
                 return False # Then return False
             else:

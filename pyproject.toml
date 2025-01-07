@@ -3,14 +3,15 @@ requires = ["pdm-backend"]
 build-backend = "pdm.backend"
 
 [project]
-name = "ChainComposer"
+name = "ChainBuilder"
 version = "0.0.1"
-description = "A tool to quickly and easily build complex LLM chains. Chain Composer is a sophisticated wrapper around core LangChain functionality allowing for quickly building complex multi-layer LLM chains."
+description = "Default template for PDM package"
 authors = [
     { name = "Spencer Presley", email = "spencerpresley96@gmail.com" },
+    {name = "Spencer Presley", email = "153392395+SpencerPresley@users.noreply.github.com"},
 ]
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.12"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
@@ -26,6 +27,7 @@ dependencies = [
     "pydantic==2.9.2",
     "platformdirs==4.3.6",
 ]
+license = {text = "MIT"}
 
 [project.optional-dependencies]
 docs = [
@@ -52,6 +54,8 @@ dev = [
 "Homepage" = "https://github.com/SpencerPresley/AIChainComposer"
 "Bug Tracker" = "https://github.com/SpencerPresley/AIChainComposer/issues"
 
+[tool.pdm]
+distribution = true
 [tool.pdm.dev-dependencies]
 test = [
     "pytest>=7.4.3",
@@ -84,14 +88,21 @@ markers = [
 
 [tool.coverage.run]
 source = ["chain_composer"]
-omit = ["tests/*"]
+omit = [
+    "chain_composer/_error_handling/messages/*",
+    "chain_composer/_type_aliases/*",
+]
 
 [tool.coverage.report]
 exclude_lines = [
     "pragma: no cover",
     "def __repr__",
-    "if TYPE_CHECKING:",
+    "def __str__",
     "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "pass",
+    "\\.\\.\\.",
+    "if __name__ == .__main__.:",
 ]
 
 [tool.black]
