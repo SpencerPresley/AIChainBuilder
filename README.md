@@ -4,6 +4,27 @@
 
 ChainBuilder is a powerful Python library for composing and orchestrating complex LLM chains. It provides a clean, intuitive interface for building sophisticated AI pipelines while handling all the complexity of prompt management, error handling, and output parsing.
 
+## Table of Contents
+
+- [ChainBuilder](#chainbuilder)
+  - [Table of Contents](#table-of-contents)
+  - [Features](#features)
+  - [Installation](#installation)
+  - [Quick Start](#quick-start)
+  - [Advanced Features](#advanced-features)
+    - [Fallback Parsing](#fallback-parsing)
+    - [Variable Management](#variable-management)
+    - [Multiple LLM Support](#multiple-llm-support)
+  - [Building Complex Systems](#building-complex-systems)
+    - [Step 0: Load the API Key](#step-0-load-the-api-key)
+    - [Step 1: Define the Output Models](#step-1-define-the-output-models)
+    - [Step 2: Define our Classification Categories](#step-2-define-our-classification-categories)
+    - [Step 3: Create the Prompts](#step-3-create-the-prompts)
+    - [Step 4: Create the Chain Layers](#step-4-create-the-chain-layers)
+    - [Step 5: Run the Chain](#step-5-run-the-chain)
+  - [Contributing](#contributing)
+  - [License](#license)
+
 ## Features
 
 - 🔗 **Flexible Chain Composition**: Build multi-layer LLM chains with ease
@@ -13,6 +34,12 @@ ChainBuilder is a powerful Python library for composing and orchestrating comple
 - 🛠️ **Type Safety**: Full type hints and Pydantic model integration
 - 📊 **Variable Management**: Automatic handling of chain variables and state
 - 🔍 **Comprehensive Logging**: Built-in logging for debugging and monitoring
+
+## Installation
+
+```bash
+pip install chain-composer
+```
 
 ## Quick Start
 
@@ -87,80 +114,6 @@ result = chain.run(
 print(result)  # Contains both first and second derivatives
 ```
 
-## Building Complex Systems
-
-ChainBuilder excels at building sophisticated AI systems. Here's an example of how it can be used to create a complex academic paper classifier:
-
-```python
-from chain_composer import ChainComposer
-from pydantic import BaseModel
-
-class MethodExtractionOutput(BaseModel):
-    methods: List[str]
-
-class AbstractSentenceAnalysis(BaseModel):
-    sentence_details: List[SentenceDetails]
-    overall_theme: str
-    summary: str
-
-class ClassificationOutput(BaseModel):
-    classifications: List[Classification]
-
-# Initialize chain for pre-classification analysis
-pre_classification = ChainComposer(
-    model="gpt-4",
-    api_key=api_key,
-)
-
-# Add layers for method extraction, sentence analysis, and summarization
-pre_classification.add_chain_layer(
-    system_prompt=METHOD_EXTRACTION_SYSTEM_MESSAGE,
-    human_prompt=HUMAN_MESSAGE_PROMPT,
-    parser_type="json",
-    fallback_parser_type="str",
-    pydantic_output_model=MethodExtractionOutput,
-    output_passthrough_key_name="method_json_output",
-).add_chain_layer(
-    system_prompt=ABSTRACT_SENTENCE_ANALYSIS_SYSTEM_MESSAGE,
-    human_prompt=HUMAN_MESSAGE_PROMPT,
-    parser_type="json",
-    fallback_parser_type="str",
-    pydantic_output_model=AbstractSentenceAnalysis,
-    output_passthrough_key_name="sentence_analysis_output",
-)
-
-# Initialize chain for classification
-classification = ChainComposer(
-    model="gpt-4",
-    api_key=api_key,
-)
-
-# Add classification layer
-classification.add_chain_layer(
-    system_prompt=CLASSIFICATION_SYSTEM_MESSAGE,
-    human_prompt=HUMAN_MESSAGE_PROMPT,
-    parser_type="json",
-    pydantic_output_model=ClassificationOutput,
-    output_passthrough_key_name="classification_output",
-)
-
-# Process an abstract
-abstract = "This paper presents a novel machine learning approach..."
-
-# Run pre-classification
-pre_classification_results = pre_classification.run(
-    prompt_variables_dict={"abstract": abstract}
-)
-
-# Use results for classification
-classification_results = classification.run(
-    prompt_variables_dict={
-        **pre_classification_results,
-        "categories": available_categories,
-    }
-)
-```
-
 ## Advanced Features
 
 ### Fallback Parsing
@@ -213,11 +166,297 @@ palm_chain = ChainComposer(
 )
 ```
 
-## Installation
+## Building Complex Systems
+
+ChainBuilder excels at building sophisticated AI systems. Here's an example of how it can be used to create a complex academic paper classifier:
+
+For this example, we will go through a step by step setup of building out the prompts and complex multi-layer chain.
+
+If you would like to see the full code for this you can find it [here](examples/complex_example/complex_example.py).
+
+If you'd like to try running the script yourself, just clone the repo, install the dependencies, and run the script:
 
 ```bash
-pip install chain-composer
+git clone https://github.com/SpencerPresley/AIChainComposer.git
+cd AIChainComposer
+pip install -r requirements.txt
+python examples/complex_example/complex_example.py
 ```
+
+### Step 0: Load the API Key
+
+First, we need to load the API key for the LLM we want to use.
+
+```python
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+api_key = os.getenv("OPENAI_API_KEY")
+```
+
+### Step 1: Define the Output Models
+
+The output models are pydantic models that will enforce the LLM to conform to a specific output format.
+
+This example will consist of 2 layers and 3 outputs.
+
+We will:
+
+1. Create a pre-classification layer to identify methdologies used in the paper and construct a sentence analysis layer to analyze the abstract and identify the overall theme and summary.
+2. Create a classification layer to classify the paper into one of the available categories.
+
+The reason for the pre-classification layer is to be able to break down the problem into smaller, more manageable parts.
+
+For classifying research papers, we need to be careful that the classifications outputted are not based on the methods used, but rather the overall theme of the research being conducted.
+
+Additionally, we want to get full context of the paper. Since LLMs tend to skim content, we will force the LLM to read each sentence in the provided abstract, having them provide sentence details and reasoning for each sentence.
+
+The classification will be the second layer, it will receive the outputs from the pre-classification layer to use them to better classify the paper.
+
+This takes a lot of responsibility off of the classification layer, allowing it to focus on the task of classification, and thus resulting in a more accurate classification.
+
+To give us some more information about how the LLM went about the problem it was given, we will also require it to provide us a reasoning and confidence score for each output.
+
+**Pydantic Output Models**:
+
+```python
+from pydantic import BaseModel
+from typing import List
+
+class MethodExtractionOutput(BaseModel):
+    methods: List[str]
+    confidence: float
+
+class SentenceDetails(BaseModel):
+    sentence: str
+    meaning: str
+    reasoning: str
+
+class SentenceAnalysisOutput(BaseModel):
+    sentence_details: List[SentenceDetails]
+    overall_theme: str
+    confidence: float
+
+class Classification(BaseModel):
+    classification: str
+
+class ClassificationOutput(BaseModel):
+    classifications: List[Classification]
+    confidence: float
+```
+
+### Step 2: Define our Classification Categories
+
+To define the categories, we will use a taxonomy released by the National Science Foundation. It can be found [here](https://ncses.nsf.gov/pubs/ncses23200).
+
+This is a 3 level taxonomy, but for this example we will only be classifying into the top categories. If you want to explore the full code which implements a classification system across all levels, check out [Academic Metrics](https://pypi.org/project/academic-metrics/) - a Python package I built that automates the collection of institutional research data and uses AI to classify publications into the full taxonomy, while also providing comprehensive analytics in various output formats. You can find the Academic Metrics source code [here](https://github.com/SpencerPresley/COSC425-DATA), and you can find the code for the classification system which uses AIChainComposer [here](https://github.com/SpencerPresley/COSC425-DATA/blob/main/src/academic_metrics/AI/abstract_classifier.py).
+
+To see this taxonomy in-memory as a string, see [taxonomy.py](examples/complex_example/taxonomy.py).
+
+Once we have the taxonomy in-memory as a string, we can load it into a dictionary, and since we're only using the top categories, we can easily convert it to a list of strings.
+
+```python
+import json
+
+taxonomy = json.loads(TAXONOMY_AS_STRING)
+categories = list(taxonomy.keys())
+```
+
+### Step 3: Create the Prompts
+
+For the prompts we need:
+
+- A system message for each layer
+- A human message which contains the abstract of the paper we want to classify
+
+Due to the power of the composer, we can just define these as strings with placeholders, we don't have to worry about making langchain components.
+
+To see the prompts used for this example, see [prompts.py](examples/complex_example/prompts.py).
+
+### Step 4: Create the Chain Layers
+
+Now that we have our output models, categories, and prompts, we can create the chain layers.
+
+```python
+from chain_composer import ChainComposer
+
+# Initialize chain for pre-classification composer
+cp = ChainComposer(
+    model="gpt-4o-mini",
+    api_key=api_key,
+)
+
+# Add layers for method extraction and sentence analysis
+# You can chain as many layers as you want, and you can use the same composer for each layer
+
+# Add our method extraction layer
+cp.add_chain_layer(
+    system_prompt=method_extraction_system_message, # The system message for the layer
+    human_prompt=human_message_prompt, # The human message for the layer
+    parser_type="json", # The parser type for the layer
+    pydantic_output_model=MethodExtractionOutput, # The output model for the layer
+    output_passthrough_key_name="method_json_output", # The key name for the output passthrough
+)
+
+# Add our sentence analysis layer
+cp.add_chain_layer(
+    system_prompt=sentence_analysis_system_message, # The system message for the layer
+    human_prompt=human_message_prompt, # The human message for the layer
+    parser_type="json", # The parser type for the layer
+    pydantic_output_model=SentenceAnalysisOutput, # The output model for the layer
+    output_passthrough_key_name="sentence_analysis_output", # The key name for the output passthrough
+)
+
+# Add classification layer
+cp.add_chain_layer(
+    system_prompt=classification_system_message, # The system message for the layer
+    human_prompt=human_message_prompt, # The human message for the layer
+    parser_type="json", # The parser type for the layer
+    pydantic_output_model=ClassificationOutput, # The output model for the layer
+    output_passthrough_key_name="classification_output", # The key name for the output passthrough
+)
+```
+
+### Step 5: Run the Chain
+
+Now that we have our chain layers, we can run the chain.
+
+The `run()` method takes in a dictionary of variables whose keys should match placeholder variables in the prompts.
+
+The `run()` method returns a dictionary which:
+
+- Contains the original input variable
+- Outputs with keys matching the `output_passthrough_key_name` for each layer
+
+To see the abstract we are using, see [abstract.py](examples/complex_example/abstract.py).
+
+```python
+# Process an abstract
+from abstract import abstract
+
+# Notice our keys match the placeholders in the prompts
+result = cp.run(
+    {
+        "abstract": abstract,
+        "categories": categories,
+        "method_json_format": method_json_format,
+        "sentence_analysis_json_format": sentence_analysis_json_format,
+        "classification_json_format": classification_json_format,
+    }
+)
+```
+
+Once this is finished, we can print out the results from each layer.
+
+For brevity, let's just print out the outputs from each layer.
+
+```python
+print(f"Method Extraction Output:\n{json.dumps(result['method_json_output'], indent=4)}\n")
+print(f"Sentence Analysis Output:\n{json.dumps(result['sentence_analysis_output'], indent=4)}\n")
+print(f"Classification Output:\n{json.dumps(result['classification_output'], indent=4)}\n")
+```
+
+The results from this will be:
+
+```bash
+Method Extraction Output:
+{
+    "methods": [
+        "discussion/seminar format",
+        "videotaped interview",
+        "support group attendance",
+        "senior center activity",
+        "center visit",
+        "culminating research paper"
+    ],
+    "confidence": 0.85
+}
+
+Sentence Analysis Output:
+{
+    "sentence_details": [
+        {
+            "sentence": "With the aging of Baby Boomers, 2030 will mark the first time in U.S. history that those aged 65 and older will outnumber children.",
+            "meaning": "In 2030, there will be more individuals aged 65 and older in the U.S. than there are children.",
+            "reasoning": "This indicates a demographic shift due to the aging Baby Boomer generation, which is a significant change in the population structure.",
+            "confidence": 0.95
+        },
+        {
+            "sentence": "This population shift is expected to place unprecedented demands on the healthcare system in terms of both volume and complexity of care.",
+            "meaning": "The increasing number of older adults will create new challenges for the healthcare system, both in the number of patients and the complexity of their health needs.",
+            "reasoning": "An aging population typically requires more healthcare services, which can be more complicated due to multiple health issues.",
+            "confidence": 0.9
+        },
+        {
+            "sentence": "Given these population shifts and emphasis on an interdisciplinary approach to care, a 4-credit Honors aging course was developed for Honors students in nursing and other health-related majors.",
+            "meaning": "In response to demographic changes, a specialized course on aging was created for high-achieving nursing and health students.",
+            "reasoning": "The course aims to prepare students for the unique challenges posed by an aging population, highlighting the need for interdisciplinary collaboration in healthcare.",
+            "confidence": 0.92
+        },
+        {
+            "sentence": "Aging Reexamined, Reimagined is offered in a discussion/seminar format with limited enrollment to allow for deep reflective discourse about pertinent issues affecting older adults.",
+            "meaning": "The course is structured as a seminar with small class sizes to facilitate in-depth discussions about important topics related to aging.",
+            "reasoning": "A smaller class size enhances student engagement and allows for more meaningful interactions regarding complex issues faced by older adults.",
+            "confidence": 0.88
+        },
+        {
+            "sentence": "Topics include physical/cognitive changes, ageism, Alzheimer's disease, sexuality, aging in place, polypharmacy, addiction, depression, caregiving, elder justice, and end-of-life care.",
+            "meaning": "The course covers a wide range of important subjects related to aging and the challenges faced by older adults.",
+            "reasoning": "These topics are relevant to understanding the multifaceted nature of aging and the healthcare needs of older individuals.",
+            "confidence": 0.95
+        },
+        {
+            "sentence": "Guest speakers share their expertise on selected issues, otherwise students alternate leading discussions on remaining topics.",
+            "meaning": "The course includes guest lectures and student-led discussions to enhance learning and engagement.",
+            "reasoning": "Inviting experts and allowing students to lead discussions fosters a richer educational environment and practical insights into aging issues.",
+            "confidence": 0.9
+        },
+        {
+            "sentence": "There are three focused reflections on assigned experiences which include conducting a videotaped interview with a retired community-based older adult, attending a support group or senior center activity, and visiting a center to view various physical/technological adaptive aids that maintain mobility and independence in the home.",
+            "meaning": "Students participate in hands-on experiences that involve interacting with older adults and observing aids that support their independence.",
+            "reasoning": "These experiential learning activities are designed to enhance students' understanding of the practical aspects of aging and care.",
+            "confidence": 0.91
+        },
+        {
+            "sentence": "There is also a culminating research paper on an issue of their choice.",
+            "meaning": "At the end of the course, students must write a research paper on a topic related to aging that interests them.",
+            "reasoning": "This assignment encourages independent research and allows students to explore a specific issue in depth, reinforcing their learning.",
+            "confidence": 0.87
+        },
+        {
+            "sentence": "Student evaluations are overwhelmingly positive; comments include gaining in-depth knowledge about the unique needs of this population and the importance of healthy aging with an emphasis on a positive, inter-professional approach to care.",
+            "meaning": "Students have given high ratings to the course, noting that they have learned a lot about older adults' needs and the benefits of collaborative care.",
+            "reasoning": "Positive evaluations suggest that the course effectively meets its educational objectives and resonates with students' experiences and learning.",
+            "confidence": 0.94
+        },
+        {
+            "sentence": "It is incumbent upon educators to better prepare students to recognize ageist attitudes, as well as address the significant impact of this longevity revolution.",
+            "meaning": "Educators have a responsibility to teach students about ageism and the implications of an increasing older population.",
+            "reasoning": "Recognizing and combating ageism is essential for healthcare professionals who will work with older adults, especially as their numbers grow.",
+            "confidence": 0.93
+        }
+    ],
+    "overall_theme": "The necessity of preparing healthcare students for the challenges of an aging population through specialized education and interdisciplinary approaches.",
+    "confidence": 0.92
+}
+
+Classification Output:
+{
+    "classifications": [
+        {
+            "categories": [
+                "Health sciences",
+                "Education",
+                "Social sciences"
+            ],
+            "confidence": 0.92
+        }
+    ]
+}
+```
+
+And this is just the tip of the iceberg.
 
 ## Contributing
 

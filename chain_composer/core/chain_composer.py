@@ -88,6 +88,7 @@ class ChainComposer:
         postprocessor: Callable[[Any], Any] | None = None,
         enable_logging: bool | None = False,
         level: int | None = WARNING,
+        debug: bool = False,
     ) -> None:
         """Initializes the ChainComposer class.
 
@@ -162,6 +163,7 @@ class ChainComposer:
             preprocessor
         )
         self.postprocessor: Optional[Callable[[Any], Any]] = postprocessor
+        self.debug: bool = debug
 
     def __str__(self) -> str:
         """Returns a concise string representation of the ChainComposer object.
@@ -311,7 +313,6 @@ class ChainComposer:
     
     def run(
         self,
-        *,
         prompt_variables_dict: Union[FirstCallRequired, None] = None,
     ) -> Dict[str, Any]:
         """Executes the chain builder process.
@@ -802,20 +803,20 @@ class ChainComposer:
             None
         """
         if self.chain_variables_update_overwrite_warning_counter == 0:
-            overwrites = {
-                key: {
-                    "old": self.chain_variables[key],
-                    "new": prompt_variables_dict[key],
-                }
-                for key in prompt_variables_dict
-                if key in self.chain_variables
-            }
-            if overwrites:
-                warnings.warn(
-                    f"Overwriting existing global variables:\n"
-                    f"{self._format_overwrite_warning(overwrites)}\n"
-                    "Subsequent overwrites will not trigger warnings."
-                )
+            # overwrites = {
+            #     key: {
+            #         "old": self.chain_variables[key],
+            #         "new": prompt_variables_dict[key],
+            #     }
+            #     for key in prompt_variables_dict
+            #     if key in self.chain_variables
+            # }
+            # if overwrites:
+            #     warnings.warn(
+            #         f"Overwriting existing global variables:\n"
+            #         f"{self._format_overwrite_warning(overwrites)}\n"
+            #         "Subsequent overwrites will not trigger warnings."
+            #     )
             self.chain_variables_update_overwrite_warning_counter += 1
 
     def _update_chain_variables(self, variables: Dict[str, Any]) -> None:
@@ -826,11 +827,12 @@ class ChainComposer:
         """
         for key, value in variables.items():
             if key in self.chain_variables:
-                warnings.warn(
-                    f"Overwriting existing chain variable '{key}' with new value '{value}'",
-                    UserWarning,
-                    stacklevel=2
-                )
+                if self.debug:
+                    warnings.warn(
+                        f"Overwriting existing chain variable '{key}' with new value '{value}'",
+                        UserWarning,
+                        stacklevel=2
+                    )
             self.chain_variables[key] = value
 
     def _validate_api_key(self, api_key: str) -> None:
