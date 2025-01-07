@@ -38,7 +38,7 @@ ChainBuilder is a powerful Python library for composing and orchestrating comple
 ## Installation
 
 ```bash
-pip install chain-composer
+pip install ChainComposer
 ```
 
 ## Quick Start
