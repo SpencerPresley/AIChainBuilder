@@ -9,3 +9,4 @@ ChainBuilder.egg-info/
 **.pdm-python
 **pdm.lock
 **.cursorignore
+**poetry.lock

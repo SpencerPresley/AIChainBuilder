@@ -1,7 +1,6 @@
 from dotenv import load_dotenv
 import os
 import json
-import logging
 from pydantic import BaseModel
 from chain_composer import ChainComposer
 
@@ -31,10 +30,6 @@ You are a helpful assistant, who takes a second derivative and returns the resul
     "second_derivative": "<answer>"
 }}
 
-First Derivative:
-
-{first_derivative}
-
 IMPORTANT: You should always return json. Do not include the markdown json format, just return the json.
 """
 
@@ -42,6 +37,16 @@ human_message = """
 Equation:
 
 {equation}
+"""
+
+human_message_2 = """
+Original Equation:
+
+{equation}
+
+First Derivative:
+
+{first_derivative}
 """
 
 def with_json_parser():
@@ -58,7 +63,7 @@ def with_json_parser():
         pydantic_output_model=FirstDerivative
     ).add_chain_layer(
         system_prompt=second_derivative_system_message,
-        human_prompt=human_message,
+        human_prompt=human_message_2,
         output_passthrough_key_name="second_derivative",
         parser_type="json",
         pydantic_output_model=SecondDerivative

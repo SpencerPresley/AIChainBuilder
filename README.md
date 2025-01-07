@@ -43,9 +43,10 @@ You are a helpful assistant, who takes the first derivative of a function and re
 
 second_derivative_system_message = """
 You are a helpful assistant, who takes a second derivative and returns the result in JSON format:
-{
+
+{{
     "second_derivative": "<answer>"
-}
+}}
 
 First Derivative:
 {first_derivative}
@@ -163,6 +164,7 @@ classification_results = classification.run(
 ## Advanced Features
 
 ### Fallback Parsing
+
 ```python
 composer.add_chain_layer(
     system_prompt=prompt,

@@ -124,24 +124,29 @@ class APIKeyValidator:
         results: ValidationResult = ValidationResult()
         prompt: ChatPromptTemplate = self._get_test_prompt()
         
-        results.openai = self._test_provider(
-            api_key,
-            self._get_openai_llm(api_key, model),
-            prompt,
-            model,
-        )
-        results.anthropic = self._test_provider(
-            api_key,
-            self._get_anthropic_llm(api_key, model),
-            prompt,
-            model,
-        )
-        results.google = self._test_provider(
-            api_key,
-            self._get_google_llm(api_key, model),
-            prompt,
-            model,
-        )
+        # Store warnings instead of immediately showing them
+        warnings_list = []
+        
+        def test_with_warning_capture(provider_name: str, provider_func) -> bool:
+            result, warning = self._test_provider(
+                api_key,
+                provider_func(api_key, model),
+                prompt,
+                model,
+            )
+            if not result and warning:
+                warnings_list.append(f"{provider_name}: {warning}")
+            return result
+            
+        # Test each provider
+        results.openai = test_with_warning_capture("OpenAI", self._get_openai_llm)
+        results.anthropic = test_with_warning_capture("Anthropic", self._get_anthropic_llm)
+        results.google = test_with_warning_capture("Google", self._get_google_llm)
+        
+        # Only show warnings if all providers failed
+        if not any([results.openai, results.anthropic, results.google]):
+            for warning in warnings_list:
+                warnings.warn(warning)
         
         self._validated_already[api_key] = results
         
@@ -206,20 +211,22 @@ class APIKeyValidator:
         llm: ChatOpenAI | ChatAnthropic | ChatGoogleGenerativeAI,
         prompt: ChatPromptTemplate,
         model: str | None = None,
-    ) -> bool:
+    ) -> tuple[bool, str | None]:
         """Run a test to see if the API key is valid for a given provider.
         
         Args:
+            api_key (str): The API key to test.
             llm (ChatOpenAI | ChatAnthropic | ChatGoogleGenerativeAI): The LLM to test.
             prompt (ChatPromptTemplate): The prompt to test the LLM with.
+            model (str | None): The model to test the LLM with.
 
         Returns:
-            bool: True if the API key is valid, False otherwise.
+            tuple[bool, str | None]: A tuple containing a boolean indicating if the API key is valid, and a string containing a warning message if the API key is not valid.
         """
         try:
             chain: Runnable = prompt | llm
             chain.invoke({})
-            return True
+            return True, None
         except Exception as e:
             error_type = str(type(e).__name__)
             if any(err in error_type for err in [
@@ -237,16 +244,16 @@ class APIKeyValidator:
                 # General
                 "RequestException",
             ]):
-                warnings.warn(
+                warning_msg = (
                     f"The API key: {self._mask(api_key)} has an issue associated with it.\n"
                     f"Error: {str(e)}\n"
                     f"Provider: {type(llm)}\n"
                     f"Model: {model}\n"
-                ) # Raise detailed error for known issues
-                return False # Then return False
+                )
+                return False, warning_msg
             else:
-                warnings.warn(f"Unexpected error during API key validation: {str(e)}") # Log a warning for unexpected errors
-                return False # Then return False
+                warning_msg = f"Unexpected error during API key validation: {str(e)}"
+                return False, warning_msg
         
     def _mask(self, api_key: str) -> str:
         """Mask the API key for display purposes."""
