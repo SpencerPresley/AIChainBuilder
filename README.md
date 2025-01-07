@@ -198,7 +198,7 @@ composer.add_chain_layer(
 ```python
 # Variables are automatically passed between layers
 result = composer.run(
-    prompt_variables_dict={
+    {
         "input": "initial input",
         "context": "additional context"
     }
@@ -213,19 +213,19 @@ variables = composer.get_chain_variables()
 ```python
 # OpenAI
 openai_chain = ChainComposer(
-    model="gpt-4",
+    model="gpt-4o-mini",
     api_key=openai_key
 )
 
 # Anthropic
 claude_chain = ChainComposer(
-    model="claude-2",
+    model="claude-3.5-sonnet-20240620",
     api_key=anthropic_key
 )
 
 # Google
 palm_chain = ChainComposer(
-    model="palm2",
+    model="gemini-1.5-flash-002",
     api_key=google_key
 )
 ```
