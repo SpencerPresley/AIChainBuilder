@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ChainComposer"
+name = "chain_composer"
 version = "0.1.6"
 description = "A tool to quickly and easily build complex LLM chains. Chain Composer is a sophisticated wrapper around core LangChain functionality allowing for quickly building complex multi-layer LLM chains."
 authors = [
@@ -51,11 +51,12 @@ docs = [
 [project.urls]
 "Homepage" = "https://github.com/SpencerPresley/AIChainComposer"
 "Bug Tracker" = "https://github.com/SpencerPresley/AIChainComposer/issues"
+"PyPI" = "https://pypi.org/project/ChainComposer/"
 
 [tool.setuptools.packages.find]
-where = ["chain_composer"]
-include = ["*"]
-namespaces = false
+where = ["."]
+include = ["chain_composer*"]
+namespaces = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
