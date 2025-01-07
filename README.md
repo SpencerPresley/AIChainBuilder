@@ -63,9 +63,9 @@ class SecondDerivative(BaseModel):
 # Create prompts
 first_derivative_system_message = """
 You are a helpful assistant, who takes the first derivative of a function and returns the result in JSON format:
-{
+{{
     "first_derivative": "<answer>"
-}
+}}
 """
 
 second_derivative_system_message = """
