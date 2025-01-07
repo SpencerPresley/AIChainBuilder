@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ChainComposer"
-version = "0.1.0"
+version = "0.1.1"
 description = "A tool to quickly and easily build complex LLM chains. Chain Composer is a sophisticated wrapper around core LangChain functionality allowing for quickly building complex multi-layer LLM chains."
 authors = [
     { name = "Spencer Presley", email = "spencerpresley96@gmail.com" }
