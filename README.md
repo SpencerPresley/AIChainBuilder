@@ -1,12 +1,12 @@
-# ChainBuilder
+# ChainComposer
 
 [![codecov](https://codecov.io/gh/SpencerPresley/AIChainComposer/graph/badge.svg?token=RSTTE8FH8Q)](https://codecov.io/gh/SpencerPresley/AIChainComposer)
 
-ChainBuilder is a powerful Python library for composing and orchestrating complex LLM chains. It provides a clean, intuitive interface for building sophisticated AI pipelines while handling all the complexity of prompt management, error handling, and output parsing.
+ChainComposer is a powerful Python library for composing and orchestrating complex LLM chains. It provides a clean, intuitive interface for building sophisticated AI pipelines while handling all the complexity of prompt management, error handling, and output parsing.
 
 ## Table of Contents
 
-- [ChainBuilder](#chainbuilder)
+- [ChainComposer](#chaincomposer)
   - [Table of Contents](#table-of-contents)
   - [Features](#features)
   - [Installation](#installation)
@@ -49,6 +49,13 @@ pip install ChainComposer
 
 This is a simple example of how to use ChainComposer. Here I build 2 layer chain where the AI from the first layer takes the first derivative of a function and the second layer AI takes the second derivative of that function.
 
+Using ChainComposer can be broken down into 4 steps:
+
+1. Define the output models (the structure you want the LLM to output)
+2. Create the prompts (the system and human messages as strings)
+3. Create the chain layers (the layers of the chain)
+4. Run the chain
+
 ```python
 from dotenv import load_dotenv
 import os
@@ -60,13 +67,25 @@ from chain_composer import ChainComposer
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
 
-# Define the output models
+# Step 1: Define the output models
 class FirstDerivative(BaseModel):
     first_derivative: str
+
+# Here we are telling the LLM for the first layer we want output in the following format:
+# {
+#     "first_derivative": "<answer>"
+# }
     
+# Step 2: Define the second layer output model
 class SecondDerivative(BaseModel):
     second_derivative: str
 
+# Here we are telling the LLM for the second layer we want output in the following format:
+# {
+#     "second_derivative": "<answer>"
+# }
+
+# Step 3: Create the prompts
 # Define the first layer system message
 first_derivative_system_message = """
 You are a helpful assistant, who takes the first derivative of a function and returns the result in the following format:
@@ -75,7 +94,7 @@ You are a helpful assistant, who takes the first derivative of a function and re
     "first_derivative": "<answer>"
 }}
 
-IMPORTANT: You should always return json. Do not include the markdown json format, just return the json.
+Note: You should always return json. Do not include the markdown json format, just return the json.
 """
 
 # Define the second layer system message
@@ -86,7 +105,7 @@ You are a helpful assistant, who takes a second derivative and returns the resul
     "second_derivative": "<answer>"
 }}
 
-IMPORTANT: You should always return json. Do not include the markdown json format, just return the json.
+Note: You should always return json. Do not include the markdown json format, just return the json.
 """
 
 # Define the human message for the first layer
@@ -107,79 +126,42 @@ First Derivative:
 {first_derivative}
 """
 
+# Step 4: Create the chain
 # Define the chain with the json parser
-def with_json_parser():
-    # Initialize the chain composer
-    cp = ChainComposer(
-        model="gpt-4o-mini",
-        api_key=api_key,
-    )
-    
-    # Add the layers with parser_type="json"
-    return cp.add_chain_layer(
-        system_prompt=first_derivative_system_message,
-        human_prompt=human_message,
-        output_passthrough_key_name="first_derivative",
-        parser_type="json",
-        pydantic_output_model=FirstDerivative
-    ).add_chain_layer(
-        system_prompt=second_derivative_system_message,
-        human_prompt=human_message_2,
-        output_passthrough_key_name="second_derivative",
-        parser_type="json",
-        pydantic_output_model=SecondDerivative
-    )
+# Here we'll be using the json parser, but you can also use pydantic and string parsers
+cp = ChainComposer(
+    model="gpt-4o-mini",
+    api_key=api_key,
+)
 
-# Define the chain with the pydantic parser
-def with_pydantic_parser():
-    # Initialize the chain composer
-    cp = ChainComposer(
-        model="gpt-4o-mini",
-        api_key=api_key,
-    )
-    
-    # Add the layers with parser_type="pydantic"
-    return cp.add_chain_layer(
-        system_prompt=first_derivative_system_message,
-        human_prompt=human_message,
-        output_passthrough_key_name="first_derivative",
-        parser_type="pydantic",
-        pydantic_output_model=FirstDerivative
-    ).add_chain_layer(
-        system_prompt=second_derivative_system_message,
-        human_prompt=human_message,
-        output_passthrough_key_name="second_derivative",
-        parser_type="pydantic",
-        pydantic_output_model=SecondDerivative
-    )
+cp.add_chain_layer( # Add the first layer
+    system_prompt=first_derivative_system_message, # The system message for the layer
+    human_prompt=human_message, # The human message for the layer
+    parser_type="json", # The parser type for the layer
+    pydantic_output_model=FirstDerivative, # The output model for the layer
+    output_passthrough_key_name="first_derivative_output", # The key name for the output passthrough
+).add_chain_layer( # Add the second layer
+    system_prompt=second_derivative_system_message, # The system message for the layer
+    human_prompt=human_message_2, # The human message for the layer
+    parser_type="json", # The parser type for the layer
+    pydantic_output_model=SecondDerivative, # The output model for the layer
+    output_passthrough_key_name="second_derivative_output", # The key name for the output passthrough
+)
 
-# Run the chain with the json parser, providing the equation as a variable in a dictionary
-json_result = with_json_parser().run(
+# Run the chain by calling the `run()` method and passing in a dictionary of variables.
+# Here we start running it by providing the `equation` variable. This will be used in the first and second layers' human prompts.
+# The `output_passthrough_key_name` argument we passed in to the `add_chain_layer()` method will be used to 
+# insert new variables into this dictionary, thus allowing the flow of outputs into placeholder variables in the prompts.
+result = cp.run(
     {
         "equation": "2x^2 + 3x + 2"
     }
 )
 
-# Run the chain with the pydantic parser, providing the equation as a variable in a dictionary
-pydantic_result = with_pydantic_parser().run(
-    {
-        "equation": "2x^2 + 3x + 2"
-    }
-)
+print(result)
 
-# Prints the json results
-def print_json_result(result: dict):
-    print(f"With json parser type on the final layer prior to running, the output is a dictionary:\n\nType: {type(result)}\n{json.dumps(result, indent=4)}\n")
-    
-# Prints the pydantic results
-def print_in_depth_pydantic_result(result: dict):
-    print(f"\n\nFor the pydantic parser type for the final layer, the output dictionary will contain the pydantic model passed in as the value of the key passed in as the output_passthrough_key_name in the last layer.\n")
-    print(f"Original Input:\n{result['equation']}\n")
-    print(f"Output from first layer is sent to next as json, thus is json in output:\n\nType: {type(result['first_derivative'])}\n\n{result['first_derivative']}\n")
-    print(f"Output from second layer is sent to next as json, but if the parser_type is \"pydantic\", it will be converted back to a pydantic model before being added back to the return dict:\n\nType: {type(result['second_derivative'])}\n\n{result['second_derivative']}")
-
-print_json_result(json_result)
-print_in_depth_pydantic_result(pydantic_result)
+# for a prettier output, you can import `json` and use `json.dumps()`
+# print(json.dumps(result, indent=4))
 ```
 
 ## Advanced Features
