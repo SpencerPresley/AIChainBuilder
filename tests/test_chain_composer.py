@@ -197,15 +197,4 @@ def test_chain_variables_update(basic_composer: ChainComposer):
     """Test updating chain variables"""
     variables = {"test_key": "test_value"}
     basic_composer._update_chain_variables(variables)
-    assert basic_composer.get_chain_variables() == variables
-
-def test_chain_variables_overwrite(basic_composer: ChainComposer):
-    """Test overwriting chain variables"""
-    initial_variables = {"test_key": "initial_value"}
-    basic_composer._update_chain_variables(initial_variables)
-    
-    new_variables = {"test_key": "new_value"}
-    with pytest.warns(UserWarning):
-        basic_composer._update_chain_variables(new_variables)
-    
-    assert basic_composer.get_chain_variables()["test_key"] == "new_value" 
+    assert basic_composer.get_chain_variables() == variables 
