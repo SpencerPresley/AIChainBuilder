@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 import warnings
 from typing import (
     Any,
@@ -44,6 +43,8 @@ from .._core_internal import (
     _ChainBuilder,
 )
 
+from ..utils import APIKeyValidator
+
 if TYPE_CHECKING:
     from pydantic import BaseModel
     from .._type_aliases import (
@@ -79,6 +80,7 @@ class ChainComposer:
 
     def __init__(
         self,
+        *,
         model: str,
         api_key: str,
         temperature: float = 0.7,
@@ -119,6 +121,10 @@ class ChainComposer:
         self.llm_model_type: str = self._get_llm_model_type(llm_model=model)
 
         self.llm_temperature: float = temperature
+        
+        # Validate API key
+        self._validate_api_key(api_key=api_key)
+        
         self.llm: Union[ChatOpenAI, ChatAnthropic, ChatGoogleGenerativeAI] = (
             self._initialize_llm(
                 api_key=self.api_key,
@@ -812,18 +818,40 @@ class ChainComposer:
                 )
             self.chain_variables_update_overwrite_warning_counter += 1
 
-    def _update_chain_variables(self, prompt_variables_dict: Dict[str, Any]) -> None:
-        """Update global variables with new values, warning on first-time overwrites.
+    def _update_chain_variables(self, variables: Dict[str, Any]) -> None:
+        """Update chain variables.
 
         Args:
-            prompt_variables_dict (dict): A dictionary containing the new values for
-                the global variables.
-                Type: Dict[str, Any]
-
-        Returns:
-            None
+            variables (Dict[str, Any]): The variables to update.
         """
-        # Update global variables with new values, warning on first-time overwrites.
-        self._check_first_time_overwrites(prompt_variables_dict)
-        self.chain_variables.update(prompt_variables_dict)
+        for key, value in variables.items():
+            if key in self.chain_variables:
+                warnings.warn(
+                    f"Overwriting existing chain variable '{key}' with new value '{value}'",
+                    UserWarning,
+                    stacklevel=2
+                )
+            self.chain_variables[key] = value
+
+    def _validate_api_key(self, api_key: str) -> None:
+        """Validate the API key.
+
+        Args:
+            api_key (str): The API key to validate.
+
+        Raises:
+            ChainError: If the API key is invalid.
+        """
+        if not api_key:
+            raise _ChainExceptionFactory.create_error(
+                error=ValueError("API key cannot be empty"),
+                error_reference=_ChainComposerErrorReference.INVALID_API_KEY
+            )
+
+        validator = APIKeyValidator()
+        if not validator.is_valid(api_key=api_key, model=self.llm_model):
+            raise _ChainExceptionFactory.create_error(
+                error=ValueError("Invalid API key"),
+                error_reference=_ChainComposerErrorReference.INVALID_API_KEY
+            )
 

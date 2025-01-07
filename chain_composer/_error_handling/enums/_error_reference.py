@@ -22,3 +22,4 @@ class _ChainComposerErrorReference(_BaseErrorReference):
     INVALID_PARSER_COMBINATION = "invalid_parser_combination"
     MISSING_PROMPT_VARIABLES = "missing_prompt_variables"
     INVALID_PROMPT_VARIABLES = "invalid_prompt_variables"
+    INVALID_API_KEY = "invalid_api_key"

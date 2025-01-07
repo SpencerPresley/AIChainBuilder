@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
 
 [project]
 name = "ChainComposer"
@@ -18,7 +18,7 @@ classifiers = [
 ]
 dependencies = [
     "langchain==0.3.7",
-    "langchain_anthropic==0.3.0", 
+    "langchain_anthropic==0.3.0",
     "langchain_core==0.3.19",
     "langchain_google_genai==2.0.5",
     "langchain_openai==0.2.9",
@@ -34,10 +34,82 @@ docs = [
     "sphinx-autodoc-typehints",
     "pydata-sphinx-theme",
 ]
+test = [
+    "pytest>=7.4.3",
+    "pytest-cov>=6.0.0",
+    "pytest-mock>=3.12.0",
+    "pytest-asyncio>=0.21.1",
+    "python-dotenv>=1.0.0",
+]
+dev = [
+    "black>=23.11.0",
+    "mypy>=1.7.0",
+    "isort>=5.12.0",
+    "flake8>=6.1.0",
+]
 
 [project.urls]
 "Homepage" = "https://github.com/SpencerPresley/AIChainComposer"
 "Bug Tracker" = "https://github.com/SpencerPresley/AIChainComposer/issues"
+
+[tool.pdm.dev-dependencies]
+test = [
+    "pytest>=7.4.3",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.12.0",
+    "pytest-asyncio>=0.21.1",
+    "python-dotenv>=1.0.0",
+]
+dev = [
+    "black>=23.11.0",
+    "mypy>=1.7.0",
+    "isort>=5.12.0",
+    "flake8>=6.1.0",
+]
+docs = [
+    "sphinx",
+    "piccolo-theme",
+    "sphinx-autodoc-typehints",
+    "pydata-sphinx-theme",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-ra -q --cov=chain_composer"
+markers = [
+    "unit: mark test as a unit test",
+    "integration: mark test as an integration test",
+]
+
+[tool.coverage.run]
+source = ["chain_composer"]
+omit = ["tests/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+]
+
+[tool.black]
+line-length = 88
+target-version = ['py39']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+check_untyped_defs = true
 
 [tool.setuptools.packages.find]
 where = ["."]
