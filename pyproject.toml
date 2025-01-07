@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "chain-composer"
+name = "ChainComposer"
 version = "0.1.2"
 description = "A tool to quickly and easily build complex LLM chains. Chain Composer is a sophisticated wrapper around core LangChain functionality allowing for quickly building complex multi-layer LLM chains."
 authors = [
