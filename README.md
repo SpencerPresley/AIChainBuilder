@@ -41,6 +41,10 @@ ChainBuilder is a powerful Python library for composing and orchestrating comple
 pip install ChainComposer
 ```
 
+> [!TIP]
+> While the install command is `pip install ChainComposer`,
+> to import modules you should do so like this: `from chain_composer import ChainComposer`.
+
 ## Quick Start
 
 This is a simple example of how to use ChainComposer. Here I build 2 layer chain where the AI from the first layer takes the first derivative of a function and the second layer AI takes the second derivative of that function.
