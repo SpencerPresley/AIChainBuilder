@@ -9,11 +9,11 @@
 [![Share on Reddit](https://img.shields.io/badge/-Share%20on%20Reddit-orange)](https://www.reddit.com/submit?url=https%3A%2F%2Fgithub.com%2FSpencerPresley%2FAIChainComposer&title=ChainComposer%20-%20Powerful%20Python%20library%20for%20LLM%20chains) [![Share on X/Twitter](https://img.shields.io/badge/-Share%20on%20Twitter-blue)](https://twitter.com/intent/tweet?text=Check%20out%20ChainComposer%20-%20Powerful%20Python%20library%20for%20LLM%20chains%20%23AI%20%23Python%0A%0Ahttps%3A%2F%2Fgithub.com%2FSpencerPresley%2FAIChainComposer) [![Share on LinkedIn](https://img.shields.io/badge/-Share%20on%20LinkedIn-blue)](https://www.linkedin.com/shareArticle?mini=true&url=https%3A%2F%2Fgithub.com%2FSpencerPresley%2FAIChainComposer&title=ChainComposer%20-%20Powerful%20Python%20library%20for%20LLM%20chains) [![Share on Hacker News](https://img.shields.io/badge/-Share%20on%20Hacker%20News-orange)](https://news.ycombinator.com/submitlink?u=https%3A%2F%2Fgithub.com%2FSpencerPresley%2FAIChainComposer&t=ChainComposer%20-%20Powerful%20Python%20library%20for%20LLM%20chains) [![Share on Pinterest](https://img.shields.io/badge/-Share%20on%20Pinterest-red)](https://pinterest.com/pin/create/button/?url=https%3A%2F%2Fgithub.com%2FSpencerPresley%2FAIChainComposer&description=ChainComposer%20-%20Powerful%20Python%20library%20for%20LLM%20chains) [![Share on Facebook](https://img.shields.io/badge/-Share%20on%20Facebook-blue)](https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fgithub.com%2FSpencerPresley%2FAIChainComposer) [![Share on Telegram](https://img.shields.io/badge/-Share%20on%20Telegram-blue)](https://telegram.me/share/url?url=https%3A%2F%2Fgithub.com%2FSpencerPresley%2FAIChainComposer&text=ChainComposer%20-%20Powerful%20Python%20library%20for%20LLM%20chains)
 
 <div align="center">
-  <h3>
-    <kbd style="background-color: #f6f8fa; padding: 10px; border-radius: 5px; border: 1px solid #d0d7de;">
+  <h1>
+    <kbd style="background-color: #f6f8fa; padding: 20px; border-radius: 5px; border: 1px solid #d0d7de;">
       pip install ChainComposer
     </kbd>
-  </h3>
+  </h1>
 </div>
 
 ChainComposer is a powerful Python library for composing and orchestrating complex LLM chains. It provides a clean, intuitive interface for building sophisticated AI pipelines while handling all the complexity of prompt management, error handling, and output parsing.
