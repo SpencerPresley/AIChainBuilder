@@ -1,6 +1,12 @@
+[![SVG Banners](https://svg-banners.vercel.app/api?type=glitch&text1=Chain%20Composer&width=800&height=400)](https://github.com/Akshay090/svg-banners)
+
 # ChainComposer
 
-[![codecov](https://codecov.io/gh/SpencerPresley/AIChainComposer/graph/badge.svg?token=RSTTE8FH8Q)](https://codecov.io/gh/SpencerPresley/AIChainComposer)
+[![codecov](https://codecov.io/gh/SpencerPresley/AIChainComposer/graph/badge.svg?token=RSTTE8FH8Q)](https://codecov.io/gh/SpencerPresley/AIChainComposer) [![PyPi](https://img.shields.io/pypi/v/ChainComposer)](https://pypi.org/project/ChainComposer/) [![Documentation](https://img.shields.io/badge/docs-latest-blue)](https://chaincomposer.readthedocs.io/en/latest/)
+
+[![GitHub issues](https://img.shields.io/github/issues/SpencerPresley/AIChainComposer)](https://github.com/SpencerPresley/AIChainComposer/issues) [![GitHub forks](https://img.shields.io/github/forks/SpencerPresley/AIChainComposer)](https://github.com/SpencerPresley/AIChainComposer/network) [![GitHub stars](https://img.shields.io/github/stars/SpencerPresley/AIChainComposer)](https://github.com/SpencerPresley/AIChainComposer/stargazers) [![GitHub license](https://img.shields.io/github/license/SpencerPresley/AIChainComposer)](https://github.com/SpencerPresley/AIChainComposer/blob/main/LICENSE) [![GitHub star chart](https://img.shields.io/github/stars/SpencerPresley/AIChainComposer?style=social)](https://star-history.com/#SpencerPresley/AIChainComposer) [![Downloads](https://static.pepy.tech/badge/chaincomposer/month)](https://pepy.tech/project/chaincomposer)
+
+[![Share on Reddit](https://img.shields.io/badge/-Share%20on%20Reddit-orange)](https://www.reddit.com/submit?url=https%3A%2F%2Fgithub.com%2FSpencerPresley%2FAIChainComposer&title=ChainComposer%20-%20Powerful%20Python%20library%20for%20LLM%20chains) [![Share on X/Twitter](https://img.shields.io/badge/-Share%20on%20Twitter-blue)](https://twitter.com/intent/tweet?text=Check%20out%20ChainComposer%20-%20Powerful%20Python%20library%20for%20LLM%20chains%20%23AI%20%23Python%0A%0Ahttps%3A%2F%2Fgithub.com%2FSpencerPresley%2FAIChainComposer) [![Share on LinkedIn](https://img.shields.io/badge/-Share%20on%20LinkedIn-blue)](https://www.linkedin.com/shareArticle?mini=true&url=https%3A%2F%2Fgithub.com%2FSpencerPresley%2FAIChainComposer&title=ChainComposer%20-%20Powerful%20Python%20library%20for%20LLM%20chains) [![Share on Hacker News](https://img.shields.io/badge/-Share%20on%20Hacker%20News-orange)](https://news.ycombinator.com/submitlink?u=https%3A%2F%2Fgithub.com%2FSpencerPresley%2FAIChainComposer&t=ChainComposer%20-%20Powerful%20Python%20library%20for%20LLM%20chains) [![Share on Pinterest](https://img.shields.io/badge/-Share%20on%20Pinterest-red)](https://pinterest.com/pin/create/button/?url=https%3A%2F%2Fgithub.com%2FSpencerPresley%2FAIChainComposer&description=ChainComposer%20-%20Powerful%20Python%20library%20for%20LLM%20chains) [![Share on Facebook](https://img.shields.io/badge/-Share%20on%20Facebook-blue)](https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fgithub.com%2FSpencerPresley%2FAIChainComposer) [![Share on Telegram](https://img.shields.io/badge/-Share%20on%20Telegram-blue)](https://telegram.me/share/url?url=https%3A%2F%2Fgithub.com%2FSpencerPresley%2FAIChainComposer&text=ChainComposer%20-%20Powerful%20Python%20library%20for%20LLM%20chains)
 
 ChainComposer is a powerful Python library for composing and orchestrating complex LLM chains. It provides a clean, intuitive interface for building sophisticated AI pipelines while handling all the complexity of prompt management, error handling, and output parsing.
 
@@ -27,13 +33,16 @@ ChainComposer is a powerful Python library for composing and orchestrating compl
 
 ## Features
 
-- 🔗 **Flexible Chain Composition**: Build multi-layer LLM chains with ease
-- 🎯 **Smart Output Parsing**: Built-in support for JSON, Pydantic, and string parsing
-- 🔄 **Fallback Handling**: Graceful degradation with configurable fallback parsers
-- 🎨 **Multiple LLM Support**: Works with OpenAI, Anthropic, and Google AI models
-- 🛠️ **Type Safety**: Full type hints and Pydantic model integration
-- 📊 **Variable Management**: Automatic handling of chain variables and state
-- 🔍 **Comprehensive Logging**: Built-in logging for debugging and monitoring
+| Category | Features | Benefits |
+|----------|----------|-----------|
+| 🔗 Chain Building | • Multi-layer Chain Support<br>• Flexible Composition<br>• Dynamic Variable Flow<br>• Chain State Management | • Complex AI workflows<br>• Modular design<br>• Data persistence<br>• State tracking |
+| 🎯 Output Handling | • JSON Parsing<br>• Pydantic Integration<br>• String Processing<br>• Fallback Parsing | • Structured outputs<br>• Type safety<br>• Format flexibility<br>• Error resilience |
+| 🤖 LLM Integration | • OpenAI Support<br>• Anthropic Support<br>• Google AI Support<br>• Multi-Model Chains | • Model flexibility<br>• Provider choice<br>• Mixed model chains<br>• Optimal performance |
+| 🛠️ Development Tools | • Type Hints<br>• Comprehensive Logging<br>• Error Handling<br>• Debug Support | • Code reliability<br>• Easy debugging<br>• Error recovery<br>• Development speed |
+| 📊 Variable Management | • Automatic Flow<br>• State Tracking<br>• Context Preservation<br>• Chain Variables | • Data consistency<br>• Context awareness<br>• Clean interfaces<br>• Easy debugging |
+| 🔄 Process Control | • Async Support<br>• Rate Limiting<br>• Retry Logic<br>• Error Recovery | • High performance<br>• API compliance<br>• Reliability<br>• Fault tolerance |
+| 📝 Prompt Management | • Template Support<br>• Dynamic Insertion<br>• Context Management<br>• Format Control | • Clean prompts<br>• Easy updates<br>• Context control<br>• Format consistency |
+| 🔍 Monitoring | • Chain Tracking<br>• Variable Inspection<br>• Error Logging<br>• Performance Metrics | • Easy debugging<br>• State visibility<br>• Issue tracking<br>• Optimization |
 
 ## Installation
 
