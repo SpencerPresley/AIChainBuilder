@@ -1,4 +1,5 @@
-[![SVG Banners](https://svg-banners.vercel.app/api?type=glitch&text1=Chain%20Composer&width=800&height=200)](https://github.com/Akshay090/svg-banners)
+[![SVG Banners](https://svg-banners.vercel.app/api?type=glitch&text1=Chain%20Composer&width=800&height=200&fontSize=65&speed=0.14&background=linear-gradient(to%20right%2C%20%23000428%2C%20%23004e92))](https://github.com/Akshay090/svg-banners)
+
 
 # ChainComposer
 
